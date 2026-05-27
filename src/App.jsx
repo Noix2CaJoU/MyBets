@@ -82,7 +82,7 @@ export default function App() {
     catch { return DEMO; }
   });
   const [tab, setTab] = useState("home");
-  const [period, setPeriod] = useState("all");
+  const [period, setPeriod] = useState("week");
   const [resultFilter, setResultFilter] = useState("all");
   const [sheet, setSheet] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -152,7 +152,7 @@ export default function App() {
 
   const TABS = [["home","Accueil"],["stats","Stats"],["import","Importer"]];
 
-  const RESULT_FILTERS = [["all","Tous"],["gain","Gagnés"],["perte","Perdus"],["encours","En cours"]];
+  const RESULT_FILTERS = [["gain","Gagnés"],["perte","Perdus"],["encours","En cours"]];
 
   return (
     <div style={s.app}>
@@ -173,15 +173,13 @@ export default function App() {
           {/* Filtres */}
           <div style={s.filterRow}>
             <select style={s.select} value={period} onChange={e=>setPeriod(e.target.value)}>
-              <option value="all">Toutes les dates</option>
-              <option value="today">Aujourd'hui</option>
               <option value="week">Cette semaine</option>
               <option value="month">Ce mois</option>
               <option value="year">Cette année</option>
             </select>
             <div style={{display:"flex",gap:6}}>
               {RESULT_FILTERS.map(([v,l])=>
-                <button key={v} style={{...s.chip,...(resultFilter===v?s.chipActive:{})}} onClick={()=>setResultFilter(v)}>{l}</button>
+                <button key={v} style={{...s.chip,...(resultFilter===v?s.chipActive:{})}} onClick={()=>setResultFilter(f=>f===v?"all":v)}>{l}</button>
               )}
             </div>
           </div>
