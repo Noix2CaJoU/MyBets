@@ -26,9 +26,10 @@ const s = {
   metric:{background:"#161618",borderRadius:12,padding:"14px",border:"0.5px solid rgba(255,255,255,0.08)"},
   metricLabel:{fontSize:11,color:"#666",textTransform:"uppercase",letterSpacing:0.5,marginBottom:6},
   metricVal:{fontSize:22,fontWeight:700,letterSpacing:-0.5},
-  filters:{display:"flex",gap:8,overflowX:"auto",paddingBottom:4,marginBottom:12,scrollbarWidth:"none"},
-  chip:{flexShrink:0,padding:"6px 14px",borderRadius:20,fontSize:13,cursor:"pointer",border:"0.5px solid rgba(255,255,255,0.14)",background:"transparent",color:"#888",fontFamily:"inherit",whiteSpace:"nowrap"},
-  chipActive:{background:"#1D9E75",color:"#fff",borderColor:"#1D9E75"},
+  filterRow:{display:"flex",gap:8,marginBottom:12,alignItems:"center"},
+  select:{flex:1,background:"#161618",border:"0.5px solid rgba(255,255,255,0.14)",borderRadius:10,color:"#f0f0f0",fontSize:14,fontFamily:"inherit",padding:"9px 14px",appearance:"none",WebkitAppearance:"none",cursor:"pointer",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 12px center"},
+  chip:{flexShrink:0,padding:"8px 14px",borderRadius:10,fontSize:13,cursor:"pointer",border:"0.5px solid rgba(255,255,255,0.14)",background:"transparent",color:"#888",fontFamily:"inherit",whiteSpace:"nowrap",appearance:"none"},
+  chipActive:{background:"#1D9E7522",color:"#1D9E75",borderColor:"#1D9E7544"},
   card:{background:"#161618",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.08)",marginBottom:10,overflow:"hidden",cursor:"pointer"},
   cardTop:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:14},
   cardEvent:{fontSize:15,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"},
@@ -81,10 +82,11 @@ export default function App() {
     catch { return DEMO; }
   });
   const [tab, setTab] = useState("home");
-  const [filter, setFilter] = useState("all");
+  const [period, setPeriod] = useState("all");
+  const [resultFilter, setResultFilter] = useState("all");
   const [sheet, setSheet] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({date:"",sport:"Football",evenement:"",pari:"",mise:"",cote:"",resultat:"encours"});
+  const [form, setForm] = useState({date:"",sport:"Football",evenement:"",pari:"",mise:"",cote:"1.10",resultat:"encours"});
 
   useEffect(() => { localStorage.setItem("paris_betclic", JSON.stringify(paris)); }, [paris]);
 
@@ -102,7 +104,7 @@ export default function App() {
 
   const openAdd = () => {
     setEditId(null);
-    setForm({date:new Date().toISOString().split("T")[0],sport:"Football",evenement:"",pari:"",mise:"",cote:"",resultat:"encours"});
+    setForm({date:new Date().toISOString().split("T")[0],sport:"Rugby",evenement:"",pari:"",mise:"",cote:"1.10",resultat:"encours"});
     setSheet(true);
   };
 
@@ -114,10 +116,13 @@ export default function App() {
 
   const filtered = paris.filter(p => {
     const now = new Date();
-    if(filter==="gain"||filter==="perte"||filter==="encours") return p.resultat===filter;
-    if(filter==="today") return p.date===now.toISOString().split("T")[0];
-    if(filter==="week"){const w=new Date(now);w.setDate(now.getDate()-7);return new Date(p.date+"T12:00:00")>=w;}
-    if(filter==="month"){const d=new Date(p.date+"T12:00:00");return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}
+    // Filtre période
+    if(period==="today") { if(p.date!==now.toISOString().split("T")[0]) return false; }
+    else if(period==="week") { const w=new Date(now);w.setDate(now.getDate()-7);if(new Date(p.date+"T12:00:00")<w) return false; }
+    else if(period==="month") { const d=new Date(p.date+"T12:00:00");if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear()) return false; }
+    else if(period==="year") { if(new Date(p.date+"T12:00:00").getFullYear()!==now.getFullYear()) return false; }
+    // Filtre résultat
+    if(resultFilter!=="all" && p.resultat!==resultFilter) return false;
     return true;
   }).sort((a,b)=>new Date(b.date)-new Date(a.date));
 
@@ -145,8 +150,9 @@ export default function App() {
   });
   const pieData = Object.entries(bySport).map(([name,d])=>({name,value:d.total,color:SPORT_COLORS[name]||"#888"}));
 
-  const FILTERS = [["all","Tous"],["today","Auj'hui"],["week","Semaine"],["month","Mois"],["gain","Gagnés"],["perte","Perdus"],["encours","En cours"]];
   const TABS = [["home","Accueil"],["stats","Stats"],["import","Importer"]];
+
+  const RESULT_FILTERS = [["all","Tous"],["gain","Gagnés"],["perte","Perdus"],["encours","En cours"]];
 
   return (
     <div style={s.app}>
@@ -163,9 +169,23 @@ export default function App() {
             <div style={s.metric}><div style={s.metricLabel}>Gain net</div><div style={{...s.metricVal,color:gnl>=0?"#1D9E75":"#E24B4A"}}>{gnl>=0?"+":""}{gnl.toFixed(2)} €</div></div>
             <div style={s.metric}><div style={s.metricLabel}>Réussite</div><div style={s.metricVal}>{taux}%</div></div>
           </div>
-          <div style={s.filters}>
-            {FILTERS.map(([v,l])=><button key={v} style={{...s.chip,...(filter===v?s.chipActive:{})}} onClick={()=>setFilter(v)}>{l}</button>)}
+
+          {/* Filtres */}
+          <div style={s.filterRow}>
+            <select style={s.select} value={period} onChange={e=>setPeriod(e.target.value)}>
+              <option value="all">Toutes les dates</option>
+              <option value="today">Aujourd'hui</option>
+              <option value="week">Cette semaine</option>
+              <option value="month">Ce mois</option>
+              <option value="year">Cette année</option>
+            </select>
+            <div style={{display:"flex",gap:6}}>
+              {RESULT_FILTERS.map(([v,l])=>
+                <button key={v} style={{...s.chip,...(resultFilter===v?s.chipActive:{})}} onClick={()=>setResultFilter(v)}>{l}</button>
+              )}
+            </div>
           </div>
+
           {filtered.length===0
             ? <div style={s.empty}><p>Aucun pari trouvé.<br/>Appuie sur + pour ajouter.</p></div>
             : <>
