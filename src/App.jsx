@@ -14,11 +14,11 @@ const DEMO = [
 
 const s = {
   app:{display:"flex",flexDirection:"column",height:"100dvh",background:"#0d0d0f",color:"#f0f0f0",fontFamily:"-apple-system,'SF Pro Display',sans-serif",overflow:"hidden"},
-  header:{padding:"52px 20px 12px",position:"fixed",top:0,left:0,right:0,zIndex:40,background:"#0d0d0f"},
+  header:{padding:"52px 20px 12px",flexShrink:0},
   title:{fontSize:24,fontWeight:700,letterSpacing:-0.5},
   titleDot:{color:"#1D9E75"},
   sub:{fontSize:12,color:"#666",marginTop:2},
-  content:{flex:1,overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:"110px 16px 80px"},
+  content:{flex:1,overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:"0 16px 80px"},
   nav:{flexShrink:0,background:"#161618",borderTop:"0.5px solid rgba(255,255,255,0.08)",display:"grid",gridTemplateColumns:"repeat(3,1fr)",paddingBottom:"env(safe-area-inset-bottom,0px)"},
   navBtn:{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 4px 8px",gap:3,background:"transparent",border:"none",color:"#666",fontSize:10,fontFamily:"inherit",cursor:"pointer"},
   navBtnActive:{color:"#1D9E75"},
