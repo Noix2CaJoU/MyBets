@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from "recharts";
 
 const SPORTS = ["Football","Tennis","Basketball","Rugby","Formule 1","Hockey","Autre"];
@@ -14,11 +14,11 @@ const DEMO = [
 
 const s = {
   app:{display:"flex",flexDirection:"column",height:"100dvh",background:"#0d0d0f",color:"#f0f0f0",fontFamily:"-apple-system,'SF Pro Display',sans-serif",overflow:"hidden"},
-  header:{padding:"52px 20px 0",flexShrink:0,transition:"transform .3s ease, opacity .3s ease"},
+  header:{padding:"52px 20px 12px",position:"fixed",top:0,left:0,right:0,zIndex:40,background:"#0d0d0f"},
   title:{fontSize:24,fontWeight:700,letterSpacing:-0.5},
   titleDot:{color:"#1D9E75"},
-  sub:{fontSize:12,color:"#666",marginTop:2,marginBottom:14},
-  content:{flex:1,overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:"0 16px 80px"},
+  sub:{fontSize:12,color:"#666",marginTop:2},
+  content:{flex:1,overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:"110px 16px 80px"},
   nav:{flexShrink:0,background:"#161618",borderTop:"0.5px solid rgba(255,255,255,0.08)",display:"grid",gridTemplateColumns:"repeat(3,1fr)",paddingBottom:"env(safe-area-inset-bottom,0px)"},
   navBtn:{display:"flex",flexDirection:"column",alignItems:"center",padding:"10px 4px 8px",gap:3,background:"transparent",border:"none",color:"#666",fontSize:10,fontFamily:"inherit",cursor:"pointer"},
   navBtnActive:{color:"#1D9E75"},
@@ -82,9 +82,6 @@ export default function App() {
     catch { return DEMO; }
   });
   const [tab, setTab] = useState("home");
-  const [headerHidden, setHeaderHidden] = useState(false);
-  const lastScrollY = useRef(0);
-  const contentRef = useRef(null);
   const [period, setPeriod] = useState("week");
   const [resultFilter, setResultFilter] = useState("all");
   const [sheet, setSheet] = useState(false);
@@ -92,14 +89,6 @@ export default function App() {
   const [form, setForm] = useState({date:"",sport:"Rugby",evenement:"",pari:"",mise:"",cote:"1.10",resultat:"encours"});
 
   useEffect(() => { localStorage.setItem("paris_betclic", JSON.stringify(paris)); }, [paris]);
-
-  const handleScroll = () => {
-    const el = contentRef.current;
-    if(!el) return;
-    const y = el.scrollTop;
-    setHeaderHidden(y > lastScrollY.current && y > 40);
-    lastScrollY.current = y;
-  };
 
   const save = () => {
     const mise = parseFloat(form.mise)||0;
@@ -163,12 +152,12 @@ export default function App() {
 
   return (
     <div style={s.app}>
-      <div style={{...s.header, transform: headerHidden?"translateY(-110%)":"translateY(0)", opacity: headerHidden?0:1, marginBottom: headerHidden?"-80px":0, pointerEvents: headerHidden?"none":"auto"}}>
+      <div style={s.header}>
         <div style={s.title}>MyBets<span style={s.titleDot}>.</span></div>
         <div style={s.sub}>{paris.length} paris · ROI {roi>=0?"+":""}{roi}%</div>
       </div>
 
-      <div ref={contentRef} onScroll={handleScroll} style={s.content}>
+      <div style={s.content}>
         {tab==="home" && <>
           <div style={s.metrics}>
             <div style={s.metric}><div style={s.metricLabel}>Paris</div><div style={s.metricVal}>{paris.length}</div></div>
