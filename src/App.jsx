@@ -163,7 +163,7 @@ export default function App() {
 
   return (
     <div style={s.app}>
-      <div style={{...s.header, transform: headerHidden?"translateY(-110%)":"translateY(0)", opacity: headerHidden?0:1}}>
+      <div style={{...s.header, transform: headerHidden?"translateY(-110%)":"translateY(0)", opacity: headerHidden?0:1, marginBottom: headerHidden?"-80px":0, pointerEvents: headerHidden?"none":"auto"}}>
         <div style={s.title}>MyBets<span style={s.titleDot}>.</span></div>
         <div style={s.sub}>{paris.length} paris · ROI {roi>=0?"+":""}{roi}%</div>
       </div>
