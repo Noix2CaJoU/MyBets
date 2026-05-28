@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from "recharts";
 
 const SPORTS = ["Football","Tennis","Basketball","Rugby","Formule 1","Hockey","Autre"];
@@ -14,7 +14,7 @@ const DEMO = [
 
 const s = {
   app:{display:"flex",flexDirection:"column",height:"100dvh",background:"#0d0d0f",color:"#f0f0f0",fontFamily:"-apple-system,'SF Pro Display',sans-serif",overflow:"hidden"},
-  header:{padding:"52px 20px 0",flexShrink:0},
+  header:{padding:"52px 20px 0",flexShrink:0,transition:"transform .3s ease, opacity .3s ease"},
   title:{fontSize:24,fontWeight:700,letterSpacing:-0.5},
   titleDot:{color:"#1D9E75"},
   sub:{fontSize:12,color:"#666",marginTop:2,marginBottom:14},
@@ -28,7 +28,7 @@ const s = {
   metricVal:{fontSize:22,fontWeight:700,letterSpacing:-0.5},
   filterRow:{display:"flex",gap:8,marginBottom:12,alignItems:"center"},
   select:{flex:1,background:"#161618",border:"0.5px solid rgba(255,255,255,0.14)",borderRadius:10,color:"#f0f0f0",fontSize:14,fontFamily:"inherit",padding:"9px 14px",appearance:"none",WebkitAppearance:"none",cursor:"pointer",backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 12px center"},
-  chip:{flexShrink:0,padding:"8px 14px",borderRadius:10,fontSize:13,cursor:"pointer",border:"0.5px solid rgba(255,255,255,0.14)",background:"transparent",color:"#888",fontFamily:"inherit",whiteSpace:"nowrap",appearance:"none"},
+  chip:{flexShrink:0,padding:"8px 14px",borderRadius:10,fontSize:13,cursor:"pointer",border:"0.5px solid rgba(255,255,255,0.14)",background:"transparent",color:"#888",fontFamily:"inherit",whiteSpace:"nowrap"},
   chipActive:{background:"#1D9E7522",color:"#1D9E75",borderColor:"#1D9E7544"},
   card:{background:"#161618",borderRadius:12,border:"0.5px solid rgba(255,255,255,0.08)",marginBottom:10,overflow:"hidden",cursor:"pointer"},
   cardTop:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:14},
@@ -41,13 +41,13 @@ const s = {
   sportTag:{fontSize:11,padding:"3px 8px",borderRadius:20,background:"#1e1e21",whiteSpace:"nowrap",marginLeft:8,flexShrink:0},
   sectionTitle:{fontSize:11,color:"#555",fontWeight:500,margin:"14px 0 10px",textTransform:"uppercase",letterSpacing:0.5},
   fab:{position:"fixed",right:20,bottom:"calc(68px + env(safe-area-inset-bottom,0px))",width:52,height:52,borderRadius:"50%",background:"#1D9E75",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(29,158,117,0.4)",zIndex:50},
-  overlay:{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:100,display:"flex",alignItems:"flex-end"},
-  sheet:{background:"#161618",borderRadius:"20px 20px 0 0",padding:"0 20px calc(28px + env(safe-area-inset-bottom,0px))",width:"100%",maxHeight:"90dvh",overflowY:"auto"},
+  overlay:{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:100,display:"flex",alignItems:"flex-end",overflow:"hidden"},
+  sheet:{background:"#161618",borderRadius:"20px 20px 0 0",padding:"0 16px calc(28px + env(safe-area-inset-bottom,0px))",width:"100%",maxHeight:"90dvh",overflowY:"auto",boxSizing:"border-box"},
   handle:{width:36,height:4,background:"rgba(255,255,255,0.14)",borderRadius:2,margin:"12px auto 18px"},
   sheetTitle:{fontSize:18,fontWeight:700,marginBottom:20},
   formLabel:{fontSize:11,color:"#666",textTransform:"uppercase",letterSpacing:0.5,marginBottom:6,display:"block"},
-  formInput:{width:"100%",background:"#1e1e21",border:"0.5px solid rgba(255,255,255,0.14)",borderRadius:8,color:"#f0f0f0",fontSize:16,fontFamily:"inherit",padding:"12px 14px",appearance:"none",WebkitAppearance:"none",marginBottom:14},
-  twoCol:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12},
+  formInput:{width:"100%",background:"#1e1e21",border:"0.5px solid rgba(255,255,255,0.14)",borderRadius:8,color:"#f0f0f0",fontSize:15,fontFamily:"inherit",padding:"11px 12px",appearance:"none",WebkitAppearance:"none",marginBottom:12,boxSizing:"border-box",minWidth:0},
+  twoCol:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,minWidth:0},
   btnRow:{display:"flex",gap:10,marginTop:20},
   btnCancel:{flex:1,padding:14,borderRadius:8,background:"#1e1e21",color:"#888",border:"none",fontSize:16,fontWeight:600,fontFamily:"inherit",cursor:"pointer"},
   btnSave:{flex:1,padding:14,borderRadius:8,background:"#1D9E75",color:"#fff",border:"none",fontSize:16,fontWeight:600,fontFamily:"inherit",cursor:"pointer"},
@@ -82,13 +82,24 @@ export default function App() {
     catch { return DEMO; }
   });
   const [tab, setTab] = useState("home");
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const contentRef = useRef(null);
   const [period, setPeriod] = useState("week");
   const [resultFilter, setResultFilter] = useState("all");
   const [sheet, setSheet] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({date:"",sport:"Football",evenement:"",pari:"",mise:"",cote:"1.10",resultat:"encours"});
+  const [form, setForm] = useState({date:"",sport:"Rugby",evenement:"",pari:"",mise:"",cote:"1.10",resultat:"encours"});
 
   useEffect(() => { localStorage.setItem("paris_betclic", JSON.stringify(paris)); }, [paris]);
+
+  const handleScroll = () => {
+    const el = contentRef.current;
+    if(!el) return;
+    const y = el.scrollTop;
+    setHeaderHidden(y > lastScrollY.current && y > 40);
+    lastScrollY.current = y;
+  };
 
   const save = () => {
     const mise = parseFloat(form.mise)||0;
@@ -116,12 +127,9 @@ export default function App() {
 
   const filtered = paris.filter(p => {
     const now = new Date();
-    // Filtre période
-    if(period==="today") { if(p.date!==now.toISOString().split("T")[0]) return false; }
-    else if(period==="week") { const w=new Date(now);w.setDate(now.getDate()-7);if(new Date(p.date+"T12:00:00")<w) return false; }
-    else if(period==="month") { const d=new Date(p.date+"T12:00:00");if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear()) return false; }
-    else if(period==="year") { if(new Date(p.date+"T12:00:00").getFullYear()!==now.getFullYear()) return false; }
-    // Filtre résultat
+    if(period==="week"){const w=new Date(now);w.setDate(now.getDate()-7);if(new Date(p.date+"T12:00:00")<w) return false;}
+    else if(period==="month"){const d=new Date(p.date+"T12:00:00");if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear()) return false;}
+    else if(period==="year"){if(new Date(p.date+"T12:00:00").getFullYear()!==now.getFullYear()) return false;}
     if(resultFilter!=="all" && p.resultat!==resultFilter) return false;
     return true;
   }).sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -150,18 +158,17 @@ export default function App() {
   });
   const pieData = Object.entries(bySport).map(([name,d])=>({name,value:d.total,color:SPORT_COLORS[name]||"#888"}));
 
-  const TABS = [["home","Accueil"],["stats","Stats"],["import","Importer"]];
-
   const RESULT_FILTERS = [["gain","Gagnés"],["perte","Perdus"],["encours","En cours"]];
+  const TABS = [["home","Accueil"],["stats","Stats"],["import","Importer"]];
 
   return (
     <div style={s.app}>
-      <div style={s.header}>
-        <div style={s.title}>Paris<span style={s.titleDot}>.</span></div>
+      <div style={{...s.header, transform: headerHidden?"translateY(-110%)":"translateY(0)", opacity: headerHidden?0:1}}>
+        <div style={s.title}>MyBets<span style={s.titleDot}>.</span></div>
         <div style={s.sub}>{paris.length} paris · ROI {roi>=0?"+":""}{roi}%</div>
       </div>
 
-      <div style={s.content}>
+      <div ref={contentRef} onScroll={handleScroll} style={s.content}>
         {tab==="home" && <>
           <div style={s.metrics}>
             <div style={s.metric}><div style={s.metricLabel}>Paris</div><div style={s.metricVal}>{paris.length}</div></div>
@@ -170,7 +177,6 @@ export default function App() {
             <div style={s.metric}><div style={s.metricLabel}>Réussite</div><div style={s.metricVal}>{taux}%</div></div>
           </div>
 
-          {/* Filtres */}
           <div style={s.filterRow}>
             <select style={s.select} value={period} onChange={e=>setPeriod(e.target.value)}>
               <option value="week">Cette semaine</option>
@@ -328,7 +334,7 @@ export default function App() {
           <input type="text" style={s.formInput} placeholder="Victoire PSG, +1.5 buts..." value={form.pari} onChange={e=>setForm(f=>({...f,pari:e.target.value}))}/>
           <div style={s.twoCol}>
             <div><label style={s.formLabel}>Mise (€)</label><input type="number" style={s.formInput} placeholder="10" value={form.mise} onChange={e=>setForm(f=>({...f,mise:e.target.value}))}/></div>
-            <div><label style={s.formLabel}>Cote</label><input type="number" style={s.formInput} placeholder="2.10" value={form.cote} onChange={e=>setForm(f=>({...f,cote:e.target.value}))}/></div>
+            <div><label style={s.formLabel}>Cote</label><input type="number" style={s.formInput} placeholder="1.10" value={form.cote} onChange={e=>setForm(f=>({...f,cote:e.target.value}))}/></div>
           </div>
           <label style={s.formLabel}>Résultat</label>
           <select style={s.formInput} value={form.resultat} onChange={e=>setForm(f=>({...f,resultat:e.target.value}))}>
