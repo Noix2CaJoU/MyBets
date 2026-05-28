@@ -14,7 +14,7 @@ const DEMO = [
 
 const s = {
   app:{display:"flex",flexDirection:"column",height:"100dvh",background:"#0d0d0f",color:"#f0f0f0",fontFamily:"-apple-system,'SF Pro Display',sans-serif",overflow:"hidden"},
-  header:{padding:"52px 20px 12px",flexShrink:0},
+  header:{padding:"52px 20px 12px"},
   title:{fontSize:24,fontWeight:700,letterSpacing:-0.5},
   titleDot:{color:"#1D9E75"},
   sub:{fontSize:12,color:"#666",marginTop:2},
@@ -152,12 +152,11 @@ export default function App() {
 
   return (
     <div style={s.app}>
-      <div style={s.header}>
-        <div style={s.title}>MyBets<span style={s.titleDot}>.</span></div>
-        <div style={s.sub}>{paris.length} paris · ROI {roi>=0?"+":""}{roi}%</div>
-      </div>
-
       <div style={s.content}>
+        <div style={s.header}>
+          <div style={s.title}>MyBets<span style={s.titleDot}>.</span></div>
+          <div style={s.sub}>{paris.length} paris &middot; ROI {roi>=0?"+":""}{roi}%</div>
+        </div>
         {tab==="home" && <>
           <div style={s.metrics}>
             <div style={s.metric}><div style={s.metricLabel}>Paris</div><div style={s.metricVal}>{paris.length}</div></div>
